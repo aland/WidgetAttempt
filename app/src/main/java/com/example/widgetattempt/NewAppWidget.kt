@@ -1,14 +1,18 @@
 package com.example.widgetattempt
 
+import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
+import android.content.Intent
+import android.util.Log
 import android.widget.RemoteViews
 
 /**
  * Implementation of App Widget functionality.
  */
 class NewAppWidget : AppWidgetProvider() {
+    private var TAG = "widgetattempt"
     override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,
@@ -27,6 +31,12 @@ class NewAppWidget : AppWidgetProvider() {
     override fun onDisabled(context: Context) {
         // Enter relevant functionality for when the last widget is disabled
     }
+
+    override fun onReceive(context: Context?, intent: Intent?) {
+        super.onReceive(context, intent)
+        Log.d(TAG, "onReceive " + intent?.action)
+    }
+
 }
 
 internal fun updateAppWidget(
@@ -38,6 +48,16 @@ internal fun updateAppWidget(
     // Construct the RemoteViews object
     val views = RemoteViews(context.packageName, R.layout.new_app_widget)
     views.setTextViewText(R.id.appwidget_text, widgetText)
+
+    val intent = Intent(context, NewAppWidget::class.java)
+        .setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
+        .putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(appWidgetId))
+    val pendingIntent = PendingIntent.getBroadcast(
+        context, appWidgetId, intent,
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+    )
+
+    views.setOnClickPendingIntent(R.id.appwidget_button, pendingIntent)
 
     // Instruct the widget manager to update the widget
     appWidgetManager.updateAppWidget(appWidgetId, views)
