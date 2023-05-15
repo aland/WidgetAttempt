@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Widget Attempt</string>
     <string name="appwidget_text">EXAMPLE</string>
+    <string name="loading_text">Loading..</string>
     <string name="add_widget">Add widget</string>
     <string name="app_widget_description">This is an app widget description</string>
     <string name="appwidget_refresh">Refresh</string>
