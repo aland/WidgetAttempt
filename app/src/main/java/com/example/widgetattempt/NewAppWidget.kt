@@ -1,12 +1,21 @@
 package com.example.widgetattempt
 
+import android.Manifest
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
+import android.os.Bundle
 import android.util.Log
 import android.widget.RemoteViews
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat.getSystemService
 import com.google.android.material.tabs.TabLayout.TabIndicatorGravity
 import com.google.gson.Gson
 import okhttp3.Call
@@ -87,8 +96,114 @@ internal fun updateAppWidget(
 
     views.setOnClickPendingIntent(R.id.appwidget_button, pendingIntent)
 
+    // fetch location data from phone if granted
+    fetchLocation(appWidgetManager, appWidgetId, views, context)
+
     // function call to fetch data from HTTP GET request
     fetchData(appWidgetManager, appWidgetId, views, context)
+}
+fun fetchLocation (
+    appWidgetManager: AppWidgetManager,
+    appWidgetId: Int,
+    views: RemoteViews,
+    context: Context
+) {
+    /*
+    ActivityCompat.requestPermissions()
+    val locationPermissionRequest = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        when {
+            permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) -> {
+                // Precise location access granted.
+            }
+            permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
+                // Only approximate location access granted.
+            } else -> {
+            // No location access granted.
+        }
+        }
+    }
+     */
+    var accessFineLocation = false
+    var accessCoarseLocation = false
+    if (ActivityCompat.checkSelfPermission(context,
+            Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        Log.d(TAG, "Fine location available")
+        accessFineLocation = true
+    }
+    if (ActivityCompat.checkSelfPermission(context,
+            Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        Log.d(TAG, "Coarse location available")
+        accessCoarseLocation = true
+    }
+
+    if (!accessFineLocation && !accessCoarseLocation) {
+        Log.d(TAG, "No location permission granted")
+        /*
+        locationPermissionRequest.launch(arrayOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION))
+         */
+        return
+    }
+
+
+    var currentLocation: Location? = null
+    val locationManager: LocationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+
+    var locationByGps: Location? = null
+    var locationByNetwork: Location? = null
+    val gpsLocationListener: LocationListener = object : LocationListener {
+        override fun onLocationChanged(location: Location) {
+            locationByGps= location
+        }
+
+        override fun onProviderEnabled(provider: String) {}
+        override fun onProviderDisabled(provider: String) {}
+    }
+//------------------------------------------------------//
+    val networkLocationListener: LocationListener = object : LocationListener {
+        override fun onLocationChanged(location: Location) {
+            locationByNetwork= location
+        }
+
+        override fun onProviderEnabled(provider: String) {}
+        override fun onProviderDisabled(provider: String) {}
+    }
+    val lastKnownLocationByGps =
+        locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+    lastKnownLocationByGps?.let {
+        locationByGps = lastKnownLocationByGps
+    }
+//------------------------------------------------------//
+    val lastKnownLocationByNetwork =
+        locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+    lastKnownLocationByNetwork?.let {
+        locationByNetwork = lastKnownLocationByNetwork
+    }
+//------------------------------------------------------//
+    if (locationByGps != null && locationByNetwork != null) {
+        Log.d(TAG, "Either location by GPS or network is available")
+        Log.d(TAG, "Gps accuracy: " + locationByGps!!.accuracy.toString())
+        Log.d(TAG, "Network accuracy: " + locationByNetwork!!.accuracy.toString())
+        if (locationByGps!!.accuracy > locationByNetwork!!.accuracy) {
+            currentLocation = locationByGps
+            val latitude = currentLocation?.latitude
+            val longitude = currentLocation?.longitude
+            // use latitude and longitude as per your need
+            Log.i(TAG, "locationByGps lat: $latitude, long: $longitude")
+        } else {
+            currentLocation = locationByNetwork
+            val latitude = currentLocation?.latitude
+            val longitude = currentLocation?.longitude
+            // use latitude and longitude as per your need
+            Log.i(TAG, "locationByNetwork lat: $latitude, long: $longitude")
+        }
+    }
+    else {
+        Log.d(TAG, "Neither location by GPS nor network is available")
+    }
 }
 fun fetchData(
     appWidgetManager: AppWidgetManager,
