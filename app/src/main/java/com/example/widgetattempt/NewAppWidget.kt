@@ -20,6 +20,7 @@ import com.google.android.material.tabs.TabLayout.TabIndicatorGravity
 import com.google.gson.Gson
 import okhttp3.Call
 import okhttp3.Callback
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -212,12 +213,18 @@ fun fetchData(
     context: Context
 ) {
 
+    val unixTime = System.currentTimeMillis()
     val url = "https://aland.themixingbowl.org/data.json"
 
-    val request = Request.Builder().url(url).build()
+    val request = Request.Builder().url(
+        url.toHttpUrl().newBuilder()
+            .addQueryParameter("timems", unixTime.toString())
+            .addQueryParameter("lat", "0")
+            .addQueryParameter("long", "0")
+            .build())
+        .build()
 
     val client = OkHttpClient()
-
 
     client.newCall(request).enqueue(object : Callback {
         override fun onResponse(call: Call, response: Response) {
