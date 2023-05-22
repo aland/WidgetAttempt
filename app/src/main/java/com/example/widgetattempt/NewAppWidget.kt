@@ -188,24 +188,34 @@ fun fetchLocation (
         Log.d(TAG, "Either location by GPS or network is available")
         Log.d(TAG, "Gps accuracy: " + locationByGps!!.accuracy.toString())
         Log.d(TAG, "Network accuracy: " + locationByNetwork!!.accuracy.toString())
+
+        val prefs = context.getSharedPreferences(R.string.preference_file_key.toString(), Context.MODE_PRIVATE).edit()
+
         if (locationByGps!!.accuracy > locationByNetwork!!.accuracy) {
             currentLocation = locationByGps
             val latitude = currentLocation?.latitude
             val longitude = currentLocation?.longitude
             // use latitude and longitude as per your need
             Log.i(TAG, "locationByGps lat: $latitude, long: $longitude")
+            prefs.putString("preference_location_lat", latitude.toString())
+            prefs.putString("preference_location_long", longitude.toString())
         } else {
             currentLocation = locationByNetwork
             val latitude = currentLocation?.latitude
             val longitude = currentLocation?.longitude
             // use latitude and longitude as per your need
             Log.i(TAG, "locationByNetwork lat: $latitude, long: $longitude")
+            prefs.putString("preference_location_lat", latitude.toString())
+            prefs.putString("preference_location_long", longitude.toString())
         }
+
+        prefs.apply()
     }
     else {
         Log.d(TAG, "Neither location by GPS nor network is available")
     }
 }
+
 fun fetchData(
     appWidgetManager: AppWidgetManager,
     appWidgetId: Int,
@@ -216,13 +226,20 @@ fun fetchData(
     val unixTime = System.currentTimeMillis()
     val url = "https://aland.themixingbowl.org/data.json"
 
+    val prefs = context.getSharedPreferences(R.string.preference_file_key.toString(), Context.MODE_PRIVATE)
+    val lat = prefs.getString("preference_location_lat", "0.0")
+    val long = prefs.getString("preference_location_long", "0.0")
+
+    Log.i(TAG, "Using lat: $lat and long: $long at $unixTime")
+
     val request = Request.Builder().url(
         url.toHttpUrl().newBuilder()
             .addQueryParameter("timems", unixTime.toString())
-            .addQueryParameter("lat", "0")
-            .addQueryParameter("long", "0")
+            .addQueryParameter("lat", lat.toString())
+            .addQueryParameter("long", long.toString())
             .build())
         .build()
+    Log.d(TAG, request.toString())
 
     val client = OkHttpClient()
 

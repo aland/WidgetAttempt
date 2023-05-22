@@ -77,12 +77,11 @@ class NewAppWidgetConfigureActivity : Activity() {
 
 }
 
-private const val PREFS_NAME = "com.example.widgetattempt.NewAppWidget"
-private const val PREF_PREFIX_KEY = "appwidget_"
+private const val PREF_PREFIX_KEY = "newappwidget"
 
 // Write the prefix to the SharedPreferences object for this widget
 internal fun saveTitlePref(context: Context, appWidgetId: Int, text: String) {
-    val prefs = context.getSharedPreferences(PREFS_NAME, 0).edit()
+    val prefs = context.getSharedPreferences(R.string.preference_file_key.toString(), Context.MODE_PRIVATE).edit()
     prefs.putString(PREF_PREFIX_KEY + appWidgetId, text)
     prefs.apply()
 }
@@ -90,13 +89,13 @@ internal fun saveTitlePref(context: Context, appWidgetId: Int, text: String) {
 // Read the prefix from the SharedPreferences object for this widget.
 // If there is no preference saved, get the default from a resource
 internal fun loadTitlePref(context: Context, appWidgetId: Int): String {
-    val prefs = context.getSharedPreferences(PREFS_NAME, 0)
+    val prefs = context.getSharedPreferences(R.string.preference_file_key.toString(), Context.MODE_PRIVATE)
     val titleValue = prefs.getString(PREF_PREFIX_KEY + appWidgetId, null)
     return titleValue ?: context.getString(R.string.appwidget_text)
 }
 
 internal fun deleteTitlePref(context: Context, appWidgetId: Int) {
-    val prefs = context.getSharedPreferences(PREFS_NAME, 0).edit()
+    val prefs = context.getSharedPreferences(R.string.preference_file_key.toString(), Context.MODE_PRIVATE).edit()
     prefs.remove(PREF_PREFIX_KEY + appWidgetId)
     prefs.apply()
 }

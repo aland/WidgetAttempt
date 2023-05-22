@@ -6,4 +6,5 @@
     <string name="app_widget_description">This is an app widget description</string>
     <string name="appwidget_refresh">Refresh</string>
     <string name="configure">Configure</string>
+    <string name="preference_file_key">com.example.widgetattempt.preferences</string>
 </resources>
